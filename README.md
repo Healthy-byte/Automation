@@ -1,6 +1,7 @@
 # Automation
 Finalproject
 
-pip install art\n
+pip install art
+
 pip install python-nmap
 
