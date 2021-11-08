@@ -5,6 +5,7 @@ import sys
 import socket
 import nmap
 import yaml
+import paramiko
 
 # Disse varibaler skal være globale da data fra flere funktioner skal gemmes
 port_list_til_print = []
@@ -31,14 +32,16 @@ def hostthreading(ip_input):
     global host_list
     ip_sidste_octet = ip_input.split(".")
 
-#Dette tager data fra arrayets 3 indeksering dvs. 4 plads
+# Dette tager data fra arrayets 3 indeksering dvs. 4 plads
+# Lav om i range, dette er ændret fordi det tage FUCKING lang tid
+# At køre scriptet og fejlfinde kode.
     for ip_sidste_octet[3] in range(0, 255):
         ip_til_scan = ".".join(map(str, ip_sidste_octet))
         t = threading.Thread(target=hostscanner, args=(ip_til_scan,))
         threads.append(t)
-    for i in range(0, 255):
+    for i in range(10, 255):
         threads[i].start()
-    for i in range(0, 255):
+    for i in range(10, 255):
         threads[i].join
     return host_list
 
@@ -62,7 +65,7 @@ def port_scanner(ip_input):
     threads = [] # tom liste
     for ports in range(500):
         t = threading.Thread(target=tcp_connnecter, args=(ip_input, ports))
-        threads.append(t) 
+        threads.append(t)
 
 # Her tilføjer alle de tråde der skal startes til ip'en
 # Dette bliver tilføjet til vores threads liste som vi kører alle sammen på samme tid senere hen 
@@ -90,7 +93,7 @@ def service_on_port():
 # https://bitbucket.org/xael/python-nmap/src/master/nmap/nmap.py
 
     for i, j in ip_and_port_for_scan:
-        print(f"Service / Scanning {i} : {j}")
+        print(f"Service Scanning {i} : {j}")
         #nmscan.scan(i, str(j), "-sC -sV") 
         nmscan.scan(i, str(j), "-A")
         var_for_print = nmscan.analyse_nmap_xml_scan()
@@ -120,7 +123,17 @@ def service_on_port():
 
 def search_exploit(product, version):
     global CVE_search_list
+    subprocess.run
 
 def bruteforce():
     global ip_and_port_for_scan
-    
+    print (ip_and_port_for_scan)
+    ip_and_port_for_bruteforce = []
+    for i, j in ip_and_port_for_scan:
+        if j == 22:
+            ip_and_port_for_bruteforce.append([i, j])
+            print (f"SSH running on IP: {i}\nStarting Bruteforce")
+    print (ip_and_port_for_bruteforce)
+# Kode fra paramiko https://docs.paramiko.org/en/stable/api/client.html
+    ssh_connection = paramiko.SSHClient()
+    ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())

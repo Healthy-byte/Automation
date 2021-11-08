@@ -36,9 +36,13 @@ def main():
             for i in host_list:
                 print(f"HOST: ----> {i} <---- IS LIVE", end="\n")
                 print (f"Scanning: {i}...", end="\n")
+                print ("\n")
                 open_ports = Scan_methods.port_scanner(i)
-        Scan_methods.service_on_port() 
+        Scan_methods.service_on_port()
 # Gem metoden i en variabel og smid den i fil til print som senere kan sendes
+        Scan_methods.bruteforce()
+
+        
     else:
         print("Not connected to the internet, waiting 1 minute and trying again")
         time.sleep(60)
