@@ -6,120 +6,121 @@ import socket
 import nmap
 import yaml
 
+# Disse varibaler skal være globale da data fra flere funktioner skal gemmes
+port_list_til_print = []
+ip_and_port_for_scan = []
 host_list = []
-#host_list_print = ""
+
+
 def hostscanner(IP):
     global host_list
-    global host_list_print
     system = sys.platform
-    DEVNULL = open(os.devnull, "w") #Skraldespand vaiabel
+    DEVNULL = open(os.devnull, "w")
+# Skraldespand vaiabel
+
     if system == 'win32':
         svar = subprocess.run(["ping", "-n", "1", "-w", "20", IP], stdout=DEVNULL)
-        #cmd_kommando = f"'ping', '-n', '1', '-w', '20', '{IP}'" # -n er antal gange -w er ms
     else:
         svar = subprocess.run(["ping", "-c", "1", IP], stdout=DEVNULL)
-        #cmd_kommando = f'"ping", "-c", "1", "{IP}"'
-    #svar = subprocess.run([cmd_kommando], stdout=DEVNULL) #Dette er blevet lavet om til nyere metode af subprocess modulet
     if svar.returncode == 0:
         host_list.append(IP)
-        #host_list_print += "HOST: " + IP + " IS LIVE!\n"      
+
 
 def hostthreading(ip_input):
     threads = []
     global host_list
-    #global host_list_print
     ip_sidste_octet = ip_input.split(".")
-    for ip_sidste_octet[3] in range(0,255): #Dette tager data fra arrayets 3 indeksering dvs. 4 plads
+
+#Dette tager data fra arrayets 3 indeksering dvs. 4 plads
+    for ip_sidste_octet[3] in range(0, 255):
         ip_til_scan = ".".join(map(str, ip_sidste_octet))
         t = threading.Thread(target=hostscanner, args=(ip_til_scan,))
         threads.append(t)
-    for i in range (0,255):
+    for i in range(0, 255):
         threads[i].start()
-    for i in range (0,255):
+    for i in range(0, 255):
         threads[i].join
-    #print(host_list) #Til debug 
     return host_list
 
-port_list_til_print = [] #Brugte en del tid på at finde ud af at dene variabel skal være global da der skal gemmes data fra flere funktioner.
-#raw_ports = [[]]
-ip_and_port_for_scan = []
+
 def tcp_connnecter(ip_input, port_number):
     global port_list_til_print
-    global raw_ports
     global ip_and_port_for_scan
     TCPsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     TCPsock.settimeout(1)
-    #succes = []
     try:
         a = TCPsock.connect_ex((ip_input, port_number))
         if a == 0:
-            #succes.append(a) 
-            #port_liste.append(port_number)
             port_list_til_print.append(f"IP: {ip_input} PORT: {port_number}: OPEN")
-
             ip_and_port_for_scan.append([ip_input, port_number])
-
-            #ip_and_port_for_scan.update({ip_input : port_number}) dictionaries kan ikke indeholde samme key til flere forskellige values.
-            #Detter bliver bare overskrevet. 
-            #print(f"IP: {ip_input} PORT: {port_number}: OPEN")
-            #print("Port " + str(port_number) + ": OPEN")   
-            #print(port_list) Den bliver taget en ad gange fordi threading funktionen har denne fukntion som targer
-            # Så kan ikke fylde en liste op her, da der bliver startet en ny "instans" af funktionen hele tiden    
     except:
         print("Error occured")
     #return port_list, "SHIT AINT WORKING"
 
-
 def port_scanner(ip_input):
     global port_list_til_print
-    global raw_ports
     threads = [] # tom liste
-    for ports in range(100):
+    for ports in range(500):
         t = threading.Thread(target=tcp_connnecter, args=(ip_input, ports))
         threads.append(t) 
-        #Her tilføjer alle de tråde der skal startes til ip'en
-        #Dette bliver tilføjet til vores threads liste som vi kører alle sammen på samme tid senere hen
-    
-    for i in range(100):
-        threads[i].start()
-        #Her starter vi alle de threads vi har gjort klart før
-        #Disse threads bliver kaldt ved hjælp af indekseringen [i]
 
-    for i in range(100):
+# Her tilføjer alle de tråde der skal startes til ip'en
+# Dette bliver tilføjet til vores threads liste som vi kører alle sammen på samme tid senere hen 
+
+    for i in range(500):
+        threads[i].start()
+
+# Her starter vi alle de threads vi har gjort klart før
+# Disse threads bliver kaldt ved hjælp af indekseringen [i]
+
+    for i in range(500):
         threads[i].join()
     return port_list_til_print
 
+CVE_search_list = [] 
+# Prøver med normal liste, dette kan give problemer når jeg skal hente data ud igen til søgning, overvejer en dict til at holde styr på IP
+
 def service_on_port():
-    global raw_ports
     global ip_and_port_for_scan
+    global CVE_search_list
+    #print(ip_and_port_for_scan)
     nmscan = nmap.PortScanner()
-    '''
-    nmscan.scan("192.168.0.1", "443", "-v -sC -sV")
-    print(nmscan.scaninfo())
-    print("IP status: ", nmscan["192.168.0.1"].state())
-    print(nmscan["192.168.0.85"].all_protocols())
-    '''
-    #print(nmscan.command_line())
-    #Bliver nok nød til at læse lidt igennem source for at fatte hvordan ting bliver printet pænt
-    # https://bitbucket.org/xael/python-nmap/src/master/nmap/nmap.py
+
+# Bliver nok nød til at læse lidt igennem source for at fatte hvordan ting bliver printet pænt
+# https://bitbucket.org/xael/python-nmap/src/master/nmap/nmap.py
+
     for i, j in ip_and_port_for_scan:
         print(f"Service / Scanning {i} : {j}")
-        nmscan.scan(i, str(j), "-sC -sV") #Den rigtige variabel (tager meget lang tid)
+        #nmscan.scan(i, str(j), "-sC -sV") 
+        nmscan.scan(i, str(j), "-A")
         var_for_print = nmscan.analyse_nmap_xml_scan()
+        #print(var_for_print)
         print(yaml.dump(var_for_print, default_flow_style=False))
 
-        #print(nmscan.command_line())
-        #print(nmscan.csv())
-        #print(nmscan.analyse_nmap_xml_scan())
-        #pprint.pprint(nmscan.analyse_nmap_xml_scan)
-        #print(nmscan.scaninfo())
-        #print(nmscan.get_nmap_last_output())
-        #var_for_print = nmscan.csv()
-        #df = pandas.read_csv(var_for_print)
-        #print(df)
-        #print(nmscan[scan])
-        #print("IP status: ", nmscan[i].state())
+# Bliver nok nød til at greppe script, cpe, product og version direkte inde i min forloop
+# Da jeg har brug for (i), (j) da jeg ikke kan regne med disse værdier er de samme (IP og port).
+# Min tanke er at bygge en liste op med de ting jeg skal hive ud fra nmap scan og bruge til CVE søgning
+
+        try:
+            name = var_for_print['scan'][i]['tcp'][j]['name']
+            product = var_for_print['scan'][i]['tcp'][j]['product']
+            version = var_for_print['scan'][i]['tcp'][j]['version']
+            if len(name) or len(product) or len(version) > 2:
+                CVE_search_list.append(f"{name} {product} {version}")
+                #CVE_search_list.append(var_for_print['scan'][i]['tcp'][j]['name'] + " " + var_for_print['scan'][i]['tcp'][j]['product'] + " " + var_for_print['scan'][i]['tcp'][j]['version'])
+            else:
+                print("Can't fetch data")
+                #CVE_search_list.append(var_for_print['scan'][i]['tcp'][j]['product'] + " " + var_for_print['scan'][i]['tcp'][j]['version'])
+        except:
+            pass
+#Bliver nød til at sætte try except ind da den ellers får typeerror fejl, da der nogle gange ikke er værdier i de keys jeg efterspørger.
+
+    print(CVE_search_list)
 
 
-    #return var_for_print
-#service_on_port()
+def search_exploit(product, version):
+    global CVE_search_list
+
+def bruteforce():
+    global ip_and_port_for_scan
+    
