@@ -7,6 +7,10 @@ import yaml
 
 
 def main():
+# Funktion der kalder Scan funktionerne i rigtig rækkefølge automatisk
+# Gemmer det til en fil som bliver sendt senere i scriptet (ikke lavet endnu)
+    sys.stdout = open('output.txt', "w")
+
     art.tprint("AutoScan", font="random")
     system = sys.platform
     if system == "win32":
@@ -42,10 +46,12 @@ def main():
 # Gem metoden i en variabel og smid den i fil til print som senere kan sendes
         Scan_methods.bruteforce()
 
-        
+        Scan_methods.search_exploit()
     else:
         print("Not connected to the internet, waiting 1 minute and trying again")
         time.sleep(60)
         main()
+
+    sys.stdout.close()
 if __name__ == "__main__":
     main()

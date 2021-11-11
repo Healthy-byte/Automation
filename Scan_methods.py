@@ -5,6 +5,7 @@ import sys
 import socket
 import nmap
 import yaml
+import pandas
 import paramiko
 
 # Disse varibaler skal være globale da data fra flere funktioner skal gemmes
@@ -121,9 +122,11 @@ def service_on_port():
     print(CVE_search_list)
 
 
-def search_exploit(product, version):
+def search_exploit():
     global CVE_search_list
-    subprocess.run
+    for i in CVE_search_list:
+        print(f"\nScanning for known CVE: {i}")
+        subprocess.run(["searchsploit", i])
 
 def bruteforce():
     global ip_and_port_for_scan
