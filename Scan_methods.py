@@ -5,7 +5,6 @@ import sys
 import socket
 import nmap
 import yaml
-import pandas
 import paramiko
 
 # Disse varibaler skal være globale da data fra flere funktioner skal gemmes
@@ -81,12 +80,14 @@ def port_scanner(ip_input):
         threads[i].join()
     return port_list_til_print
 
-CVE_search_list = [] 
+CVE_search_list = []
 # Prøver med normal liste, dette kan give problemer når jeg skal hente data ud igen til søgning, overvejer en dict til at holde styr på IP
 
 def service_on_port():
     global ip_and_port_for_scan
     global CVE_search_list
+    up_or_down_host_list = {'Up hosts': 0, 'Down hosts': 0}
+    up_IP = []
     #print(ip_and_port_for_scan)
     nmscan = nmap.PortScanner()
 
@@ -106,37 +107,60 @@ def service_on_port():
 # Min tanke er at bygge en liste op med de ting jeg skal hive ud fra nmap scan og bruge til CVE søgning
 
         try:
+            down_host = var_for_print['nmap']['scanstats']['downhosts']
             name = var_for_print['scan'][i]['tcp'][j]['name']
             product = var_for_print['scan'][i]['tcp'][j]['product']
             version = var_for_print['scan'][i]['tcp'][j]['version']
-            if len(name) or len(product) or len(version) > 2:
-                CVE_search_list.append(f"{name} {product} {version}")
-                #CVE_search_list.append(var_for_print['scan'][i]['tcp'][j]['name'] + " " + var_for_print['scan'][i]['tcp'][j]['product'] + " " + var_for_print['scan'][i]['tcp'][j]['version'])
+            if down_host == '0' and i not in up_IP:
+                up_or_down_host_list['Up hosts'] += 1
+                up_IP.append(i)
+            elif down_host == '1':
+                up_or_down_host_list['Down hosts'] += 1
+            if len(name) or len(product) or len(version) > 2 and down_host != '0':
+                CVE_search_list.append([i, name, product, version])
             else:
-                print("Can't fetch data")
-                #CVE_search_list.append(var_for_print['scan'][i]['tcp'][j]['product'] + " " + var_for_print['scan'][i]['tcp'][j]['version'])
+                print(f"Can't fetch data for {i}")
         except:
             pass
 #Bliver nød til at sætte try except ind da den ellers får typeerror fejl, da der nogle gange ikke er værdier i de keys jeg efterspørger.
-
-    print(CVE_search_list)
+    print(yaml.dump(up_or_down_host_list))
+    for i in up_IP:
+        print(f"Host: {i} is up")
 
 
 def search_exploit():
     global CVE_search_list
-    for i in CVE_search_list:
-        print(f"\nScanning for known CVE: {i}")
-        subprocess.run(["searchsploit", i])
+    #print (CVE_search_list)
+# Specifik søgning af exploiot-db databasen. Kan laves til online søgning, lige nu søger den kun lokalt.
+# Overvejer om man skal have "searchsploit -u" med i koden så biblioteket bliver opdateret hver gang man køre koden
+    for ip, name, product, version in CVE_search_list:
+        print(f"\nScanning for known CVE: {ip} {name} {product} {version}")
+        if len(product) > 1:
+            subprocess.run(["searchsploit", product])
+            print(f"Grepping for specific version {version}")
+            if version != " ":
+                search_version = subprocess.run(["searchsploit", product], capture_output=True)
+                print(subprocess.run(['grep', str(version)], input=search_version.stdout, capture_output=True))
+        elif len(name) > 1:
+            subprocess.run(["searchsploit", name])
+            print(f"Grepping for specific version {version}")
+            if version != " ":
+                search_version = subprocess.run(["searchsploit", name], capture_output=True)
+                print(subprocess.run(['grep', str(version)], input=search_version.stdout, capture_output=True))
+        else:
+            print("Not able to fetch product, name or version, can't search for exploit")
+# Skal have snakket lidt med Ole om hvor specifik søgningen skal være, om man vil have en quick win eller man vil finde overordnede exploits
+# Lige nu kan jeg ikke få grep til at fungere. PIPE med subproccess er fundet her: https://stackoverflow.com/questions/13332268/how-to-use-subprocess-command-with-pipes
 
 def bruteforce():
     global ip_and_port_for_scan
-    print (ip_and_port_for_scan)
+    #print (ip_and_port_for_scan)
     ip_and_port_for_bruteforce = []
     for i, j in ip_and_port_for_scan:
         if j == 22:
             ip_and_port_for_bruteforce.append([i, j])
             print (f"SSH running on IP: {i}\nStarting Bruteforce")
-    print (ip_and_port_for_bruteforce)
+    #print (ip_and_port_for_bruteforce)
 # Kode fra paramiko https://docs.paramiko.org/en/stable/api/client.html
     ssh_connection = paramiko.SSHClient()
     ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
