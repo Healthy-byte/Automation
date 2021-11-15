@@ -86,8 +86,6 @@ CVE_search_list = []
 def service_on_port():
     global ip_and_port_for_scan
     global CVE_search_list
-    up_or_down_host_list = {'Up hosts': 0, 'Down hosts': 0}
-    up_IP = []
     #print(ip_and_port_for_scan)
     nmscan = nmap.PortScanner()
 
@@ -100,55 +98,49 @@ def service_on_port():
         nmscan.scan(i, str(j), "-A")
         var_for_print = nmscan.analyse_nmap_xml_scan()
         #print(var_for_print)
-        print(yaml.dump(var_for_print, default_flow_style=False))
+        #print(yaml.dump(var_for_print, default_flow_style=False))
 
 # Bliver nok nød til at greppe script, cpe, product og version direkte inde i min forloop
 # Da jeg har brug for (i), (j) da jeg ikke kan regne med disse værdier er de samme (IP og port).
 # Min tanke er at bygge en liste op med de ting jeg skal hive ud fra nmap scan og bruge til CVE søgning
 
+        til_print = nmscan[i].tcp(j)
+        #print(til_print)
+        #print (til_print["state"])
+        print("Port " + str(j) + ": " + til_print["state"] + " " + til_print["cpe"] + "\n")
+        splittet_cpe = til_print["cpe"].split(":")
+        for i in splittet_cpe[-3:]:
+            print (i)
+
         try:
-            down_host = var_for_print['nmap']['scanstats']['downhosts']
             name = var_for_print['scan'][i]['tcp'][j]['name']
             product = var_for_print['scan'][i]['tcp'][j]['product']
             version = var_for_print['scan'][i]['tcp'][j]['version']
-            if down_host == '0' and i not in up_IP:
-                up_or_down_host_list['Up hosts'] += 1
-                up_IP.append(i)
-            elif down_host == '1':
-                up_or_down_host_list['Down hosts'] += 1
-            if len(name) or len(product) or len(version) > 2 and down_host != '0':
+            if len(name) or len(product) or len(version) > 2:
                 CVE_search_list.append([i, name, product, version])
             else:
                 print(f"Can't fetch data for {i}")
         except:
             pass
 #Bliver nød til at sætte try except ind da den ellers får typeerror fejl, da der nogle gange ikke er værdier i de keys jeg efterspørger.
-    print(yaml.dump(up_or_down_host_list))
-    for i in up_IP:
-        print(f"Host: {i} is up")
 
 
 def search_exploit():
     global CVE_search_list
     #print (CVE_search_list)
+
 # Specifik søgning af exploiot-db databasen. Kan laves til online søgning, lige nu søger den kun lokalt.
 # Overvejer om man skal have "searchsploit -u" med i koden så biblioteket bliver opdateret hver gang man køre koden
+
     for ip, name, product, version in CVE_search_list:
         print(f"\nScanning for known CVE: {ip} {name} {product} {version}")
         if len(product) > 1:
             subprocess.run(["searchsploit", product])
-            print(f"Grepping for specific version {version}")
-            if version != " ":
-                search_version = subprocess.run(["searchsploit", product], capture_output=True)
-                print(subprocess.run(['grep', str(version)], input=search_version.stdout, capture_output=True))
+            command = f"searchsploit {product} | grep {version}"
         elif len(name) > 1:
             subprocess.run(["searchsploit", name])
-            print(f"Grepping for specific version {version}")
-            if version != " ":
-                search_version = subprocess.run(["searchsploit", name], capture_output=True)
-                print(subprocess.run(['grep', str(version)], input=search_version.stdout, capture_output=True))
         else:
-            print("Not able to fetch product, name or version, can't search for exploit")
+            print("Not able to fetch data")
 # Skal have snakket lidt med Ole om hvor specifik søgningen skal være, om man vil have en quick win eller man vil finde overordnede exploits
 # Lige nu kan jeg ikke få grep til at fungere. PIPE med subproccess er fundet her: https://stackoverflow.com/questions/13332268/how-to-use-subprocess-command-with-pipes
 
