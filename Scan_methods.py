@@ -93,35 +93,28 @@ def service_on_port():
 # https://bitbucket.org/xael/python-nmap/src/master/nmap/nmap.py
 
     for i, j in ip_and_port_for_scan:
-        print(f"Service Scanning {i} : {j}")
+        print(f"\nService Scanning {i} : {j}")
         #nmscan.scan(i, str(j), "-sC -sV") 
         nmscan.scan(i, str(j), "-A")
-        var_for_print = nmscan.analyse_nmap_xml_scan()
-        #print(var_for_print)
-        #print(yaml.dump(var_for_print, default_flow_style=False))
+        nmap_full_scan = nmscan.analyse_nmap_xml_scan()
+        #print(nmap_full_scan)
+        #print(yaml.dump(nmap_full_scan, default_flow_style=False))
 
 # Bliver nok nød til at greppe script, cpe, product og version direkte inde i min forloop
 # Da jeg har brug for (i), (j) da jeg ikke kan regne med disse værdier er de samme (IP og port).
 # Min tanke er at bygge en liste op med de ting jeg skal hive ud fra nmap scan og bruge til CVE søgning
 
-        til_print = nmscan[i].tcp(j)
-        #print(til_print)
-        #print (til_print["state"])
-        print("Port " + str(j) + ": " + til_print["state"] + " " + til_print["cpe"] + "\n")
-        splittet_cpe = til_print["cpe"].split(":")
-        for i in splittet_cpe[-3:]:
-            print (i)
+        name = nmap_full_scan['scan'][i]['tcp'][j]['name']
+        product = nmap_full_scan['scan'][i]['tcp'][j]['product']
+        version = nmap_full_scan['scan'][i]['tcp'][j]['version']
+        if len(name) or len(product) or len(version) > 2:
+            CVE_search_list.append([i, name, product, version])
+        else:
+            print(f"Can't fetch data for {i}")
+        print(f"Name: {name}")
+        print(f"Product: {product}")
+        print(f"Version: {version}")
 
-        try:
-            name = var_for_print['scan'][i]['tcp'][j]['name']
-            product = var_for_print['scan'][i]['tcp'][j]['product']
-            version = var_for_print['scan'][i]['tcp'][j]['version']
-            if len(name) or len(product) or len(version) > 2:
-                CVE_search_list.append([i, name, product, version])
-            else:
-                print(f"Can't fetch data for {i}")
-        except:
-            pass
 #Bliver nød til at sætte try except ind da den ellers får typeerror fejl, da der nogle gange ikke er værdier i de keys jeg efterspørger.
 
 
@@ -136,9 +129,14 @@ def search_exploit():
         print(f"\nScanning for known CVE: {ip} {name} {product} {version}")
         if len(product) > 1:
             subprocess.run(["searchsploit", product])
-            command = f"searchsploit {product} | grep {version}"
+            print("Scanning for specific verison if present")
+            if version != "" or " ":
+                subprocess.run(["searchsploit", product, version])
         elif len(name) > 1:
             subprocess.run(["searchsploit", name])
+            print("Scanning for specific version if present")
+            if version != "" or " ":
+                subprocess.run(["searchsploit", name, version])
         else:
             print("Not able to fetch data")
 # Skal have snakket lidt med Ole om hvor specifik søgningen skal være, om man vil have en quick win eller man vil finde overordnede exploits
