@@ -44,4 +44,4 @@ pip install python-nmap
 
 pip install paramiko
 
-pip install 
+pip install yaml
