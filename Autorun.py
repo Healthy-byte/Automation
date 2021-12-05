@@ -1,5 +1,4 @@
 import hack
-import socket
 import time
 import telepot
 import os
@@ -69,7 +68,8 @@ def scan():
     '''
     dato = datetime.now()
     dato_list = (dato.strftime("%d/%m/%Y"), dato.strftime("%H:%M:%S"))
-    telebot_cli_print(f"Dato: {dato_list[0]}\nTid: {dato_list[1]}")
+    telebot_cli_print(f"Dato: {dato_list[0]}\nTid: {dato_list[1]}\n")
+    telebot_cli_print(f"{hack.searchsploit_update()}\n")
     ip_str, ip_list = hack.host_scanner()
     if ip_list == []:
         telebot_cli_print("Ingen aktive ip'er fundet\n")
