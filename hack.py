@@ -290,7 +290,7 @@ def run_subprocess(name, product, version):
     til søgning i Seachsploit. Funktionen returnere en dictionary med 
     resultat af søgning.
     '''
-    process = subprocess.Popen(["searchsploit", "-j", name, product, version], stdout=subprocess.PIPE)
+    process = subprocess.Popen(["/opt/exploitdb/searchsploit", "-j", name, product, version], stdout=subprocess.PIPE)
     output = process.stdout.read()
     json_output = json.loads(output.decode())
     return json_output
@@ -355,7 +355,7 @@ def searchsploit_update():
     '''
     sploit_str = ""
     try:
-        svar = subprocess.run(["searchsploit", "-u"])
+        svar = subprocess.run(["/opt/exploitdb/searchsploit", "-u"])
         if svar.returncode == 6:
             sploit_str += "Searchsploit er blevet opdateret."
         else:

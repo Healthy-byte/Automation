@@ -55,8 +55,9 @@ def telebot_cli_print(msg):
     file.write(f"{msg} \n")
     file.close()
     if msg == "Scanning afsluttet.":
-        file = open(file_name, "rb")
-        bot.sendDocument(chat_id, file)
+        if internet:
+            file = open(file_name, "rb")
+            bot.sendDocument(chat_id, file)
 
 
 def scan():
@@ -66,10 +67,12 @@ def scan():
     vores telebot_cli_print funktion. Dette er
     vores hovedfunktion.
     '''
+    global internet
     dato = datetime.now()
     dato_list = (dato.strftime("%d/%m/%Y"), dato.strftime("%H:%M:%S"))
     telebot_cli_print(f"Dato: {dato_list[0]}\nTid: {dato_list[1]}\n")
-    telebot_cli_print(f"{hack.searchsploit_update()}\n")
+    if internet:
+        telebot_cli_print(f"{hack.searchsploit_update()}\n")
     ip_str, ip_list = hack.host_scanner()
     if ip_list == []:
         telebot_cli_print("Ingen aktive ip'er fundet\n")
@@ -123,6 +126,7 @@ except Exception:
         scan()
     else:
         telebot_cli_print("Interface: eht0 og wlan0 er ikke tilsluttet et network")
-while 1:
-    time.sleep(3600)
-    scan()
+while True:
+    time.sleep(36000)
+    if internet == False:
+        scan()
