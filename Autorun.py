@@ -115,14 +115,16 @@ try:
     if len(net_private_list) == 1:
         telebot_cli_print(f"Local IP: {net_private_list[0][0]} / {net_private_list[0][1]}\nPublic IP: {public_ip}\n")
     else:
-        telebot_cli_print(f"Local IP: {net_private_list[0][0]} / {net_private_list[0][1]}\n          {net_private_list[1][0]} / {net_private_list[1][1]}\nPublic IP: {public_ip}\n")
+        telebot_cli_print(f"Local IP: {net_private_list[0][0]} / {net_private_list[0][1]}\n\
+        {net_private_list[1][0]} / {net_private_list[1][1]}\nPublic IP: {public_ip}\n")
 except Exception:
     internet = False
     if len(net_private_list) == 1:
         telebot_cli_print(f"Local IP: {net_private_list[0][0]} / {net_private_list[0][1]}\n")
         scan()
     elif len(net_private_list) == 2:
-        telebot_cli_print(f"Local IP: {net_private_list[0][0]} / {net_private_list[0][1]}\n          {net_private_list[1][0]} / {net_private_list[1][1]}\n")
+        telebot_cli_print(f"Local IP: {net_private_list[0][0]} / {net_private_list[0][1]}\n\
+        {net_private_list[1][0]} / {net_private_list[1][1]}\n")
         scan()
     else:
         telebot_cli_print("Interface: eht0 og wlan0 er ikke tilsluttet et network")
