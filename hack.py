@@ -142,7 +142,9 @@ def host_scanner():
 
         if len(net_private_list) == 1:
             net = net_id_finder(net_private_list[0])
-            ip_str = f"Starter scanning af hele IPv4 network: {str(net)}\nFinder alle aktive enheder.\nScanner Well knowns Ports(1-1024) hos aktive enheder.\nAktive porte bliver Nmap scannet.\nNmap info gives til Searchsploit\n\n"
+            ip_str = f"Starter scanning af hele IPv4 network: {str(net)}\nFinder alle aktive enheder.\n\
+            Scanner Well knowns Ports(1-1024) hos aktive enheder.\nAktive porte bliver Nmap scannet.\n\
+            Nmap info gives til Searchsploit\n\n"
             for host in net:
                 t = threading.Thread(target=ping_test, args=(str(host), ip_private_list))
                 threads.append(t)
@@ -163,7 +165,9 @@ def host_scanner():
 
         elif len(net_private_list) == 2:
             net = net_id_finder(net_private_list[0])
-            ip_str = f"Starter scanning af hele IPv4 network: {str(net)}\nFinder alle aktive enheder.\nScanner Well knowns Ports(1-1024) hos aktive enheder.\nAktive porte bliver Nmap scannet.\nNmap info gives til Searchsploit\n\n"
+            ip_str = f"Starter scanning af hele IPv4 network: {str(net)}\nFinder alle aktive enheder.\n\
+            Scanner Well knowns Ports(1-1024) hos aktive enheder.\nAktive porte bliver Nmap scannet.\n\
+            Nmap info gives til Searchsploit\n\n"
             for host in net:
                 t = threading.Thread(target=ping_test, args=(str(host), ip_private_list))
                 threads.append(t)
