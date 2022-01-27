@@ -37,4 +37,4 @@ In the same directory as the scan files (Automation), create a file called "secr
 Edit the file with a text editor and copy your token into the file like this: 
 token = "123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" #Change the token example with your own
 
-run the 
+run the telebot_phone_id.py script to get your chat id, write anything in the Telegram application and save the output to the secrets.py with the var name: chat_id = 12345
