@@ -1,5 +1,5 @@
 # Automation
-The project is ment to run on a Raspberry Pi in a Cronjob for automatic network scans. The project is using the Telegram application for exfiltration of data. Follow below steps for correct setup (works on all linux destro's).
+The project is ment to run on a Raspberry Pi in a Cronjob for automatic network scans. The project is using the Telegram application for exfiltration of data. Follow below steps for correct setup (works on all linux distro's).
 
 ### INSTALL APT-GET PACKAGES ###
 
